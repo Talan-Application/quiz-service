@@ -1,0 +1,121 @@
+package grpc
+
+import (
+	"context"
+	"errors"
+
+	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	quizv1 "github.com/Talan-Application/quiz-service/gen/quiz/v1"
+	"github.com/Talan-Application/quiz-service/internal/domain"
+	"github.com/Talan-Application/quiz-service/internal/service"
+)
+
+type Handler struct {
+	quizv1.UnimplementedQuizServiceServer
+	quizSvc service.IQuizService
+	log     *zap.Logger
+}
+
+func NewHandler(quizSvc service.IQuizService, log *zap.Logger) *Handler {
+	return &Handler{quizSvc: quizSvc, log: log}
+}
+
+func (h *Handler) CreateQuiz(ctx context.Context, req *quizv1.CreateQuizRequest) (*quizv1.QuizResponse, error) {
+	quiz := &domain.Quiz{
+		Title:     req.GetTitle(),
+		Language:  req.GetLanguage(),
+		AuthorID:  req.GetAuthorId(),
+		Type:      domain.QuizType(req.GetType()),
+		SubjectID: req.GetSubjectId(),
+		Status:    domain.QuizStatusDraft,
+	}
+
+	created, err := h.quizSvc.Create(ctx, quiz)
+	if err != nil {
+		return nil, h.toGRPCError(err)
+	}
+
+	return toProto(created), nil
+}
+
+func (h *Handler) GetQuiz(ctx context.Context, req *quizv1.GetQuizRequest) (*quizv1.QuizResponse, error) {
+	quiz, err := h.quizSvc.GetByID(ctx, req.GetId())
+	if err != nil {
+		return nil, h.toGRPCError(err)
+	}
+
+	return toProto(quiz), nil
+}
+
+func (h *Handler) GetAllQuizzes(ctx context.Context, req *quizv1.GetAllQuizzesRequest) (*quizv1.GetAllQuizzesResponse, error) {
+	var limit, offset *int
+
+	if req.Limit != nil {
+		v := int(req.GetLimit())
+		limit = &v
+	}
+	if req.Offset != nil {
+		v := int(req.GetOffset())
+		offset = &v
+	}
+
+	quizzes, err := h.quizSvc.GetAll(ctx, limit, offset)
+	if err != nil {
+		return nil, h.toGRPCError(err)
+	}
+
+	protos := make([]*quizv1.QuizResponse, len(quizzes))
+	for i := range quizzes {
+		protos[i] = toProto(&quizzes[i])
+	}
+
+	return &quizv1.GetAllQuizzesResponse{Quizzes: protos}, nil
+}
+
+func (h *Handler) UpdateQuiz(ctx context.Context, req *quizv1.UpdateQuizRequest) (*quizv1.QuizResponse, error) {
+	quiz := &domain.Quiz{
+		Title:    req.GetTitle(),
+		Language: req.GetLanguage(),
+		Type:     domain.QuizType(req.GetType()),
+	}
+
+	updated, err := h.quizSvc.Update(ctx, req.GetId(), quiz)
+	if err != nil {
+		return nil, h.toGRPCError(err)
+	}
+
+	return toProto(updated), nil
+}
+
+func (h *Handler) DeleteQuiz(ctx context.Context, req *quizv1.DeleteQuizRequest) (*quizv1.DeleteQuizResponse, error) {
+	if err := h.quizSvc.Delete(ctx, req.GetId()); err != nil {
+		return nil, h.toGRPCError(err)
+	}
+
+	return &quizv1.DeleteQuizResponse{Message: "quiz deleted"}, nil
+}
+
+func toProto(q *domain.Quiz) *quizv1.QuizResponse {
+	return &quizv1.QuizResponse{
+		Id:        q.ID,
+		Title:     q.Title,
+		Language:  q.Language,
+		AuthorId:  q.AuthorID,
+		Status:    string(q.Status),
+		Type:      string(q.Type),
+		SubjectId: q.SubjectID,
+		CreatedAt: q.CreatedAt.Unix(),
+		UpdatedAt: q.UpdatedAt.Unix(),
+	}
+}
+
+func (h *Handler) toGRPCError(err error) error {
+	if errors.Is(err, domain.ErrQuizNotFound) {
+		return status.Error(codes.NotFound, err.Error())
+	}
+	h.log.Error("unexpected error", zap.Error(err))
+	return status.Error(codes.Internal, "internal error")
+}

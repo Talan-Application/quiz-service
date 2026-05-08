@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package quiz.v1;
+
+option go_package = "github.com/Talan-Application/quiz-service/gen/quiz/v1;quizv1";
+
+service QuizService {
+  rpc CreateQuiz(CreateQuizRequest)       returns (QuizResponse);
+  rpc GetQuiz(GetQuizRequest)             returns (QuizResponse);
+  rpc GetAllQuizzes(GetAllQuizzesRequest) returns (GetAllQuizzesResponse);
+  rpc UpdateQuiz(UpdateQuizRequest)       returns (QuizResponse);
+  rpc DeleteQuiz(DeleteQuizRequest)       returns (DeleteQuizResponse);
+}
+
+message CreateQuizRequest {
+  string title      = 1;
+  string language   = 2;
+  int64  author_id  = 3;
+  string type       = 4;
+  int64  subject_id = 5;
+}
+
+message UpdateQuizRequest {
+  int64  id       = 1;
+  string title    = 2;
+  string language = 3;
+  string type     = 4;
+}
+
+message GetQuizRequest {
+  int64 id = 1;
+}
+
+message GetAllQuizzesRequest {
+  optional int32 limit  = 1;
+  optional int32 offset = 2;
+}
+
+message DeleteQuizRequest {
+  int64 id = 1;
+}
+
+message QuizResponse {
+  int64  id         = 1;
+  string title      = 2;
+  string language   = 3;
+  int64  author_id  = 4;
+  string status     = 5;
+  string type       = 6;
+  int64  subject_id = 7;
+  int64  created_at = 8;
+  int64  updated_at = 9;
+}
+
+message GetAllQuizzesResponse {
+  repeated QuizResponse quizzes = 1;
+}
+
+message DeleteQuizResponse {
+  string message = 1;
+}
