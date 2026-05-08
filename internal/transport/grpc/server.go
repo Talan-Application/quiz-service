@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	quizv1 "github.com/Talan-Application/quiz-service/gen/quiz/v1"
+	quizv1 "github.com/Talan-Application/proto-generation/quiz/v1"
 	"github.com/Talan-Application/quiz-service/internal/config"
 	"github.com/Talan-Application/quiz-service/internal/service"
 )
