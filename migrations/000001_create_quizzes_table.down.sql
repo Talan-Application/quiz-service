@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS quizzes;
+DROP TYPE IF EXISTS quiz_type;
+DROP TYPE IF EXISTS quiz_status;
