@@ -13,3 +13,19 @@ type QuizRepository interface {
 	GetAll(ctx context.Context, limit *int, offset *int) ([]domain.Quiz, error)
 	GetById(ctx context.Context, id int64) (*domain.Quiz, error)
 }
+
+type QuestionRepository interface {
+	Create(ctx context.Context, question *domain.Question) (*domain.Question, error)
+	Delete(ctx context.Context, id int64) error
+	Update(ctx context.Context, id int64, question *domain.Question) (*domain.Question, error)
+	GetAll(ctx context.Context, quizID int64, limit *int, offset *int) ([]domain.Question, error)
+	GetById(ctx context.Context, id int64) (*domain.Question, error)
+}
+
+type AnswerRepository interface {
+	Create(ctx context.Context, answer *domain.Answer) (*domain.Answer, error)
+	Delete(ctx context.Context, id int64) error
+	Update(ctx context.Context, id int64, answer *domain.Answer) (*domain.Answer, error)
+	GetAll(ctx context.Context, questionID int64, limit *int, offset *int) ([]domain.Answer, error)
+	GetById(ctx context.Context, id int64) (*domain.Answer, error)
+}

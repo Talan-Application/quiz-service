@@ -11,6 +11,7 @@ import (
 	quizv1 "github.com/Talan-Application/proto-generation/quiz/v1"
 	"github.com/Talan-Application/quiz-service/internal/config"
 	"github.com/Talan-Application/quiz-service/internal/service"
+	"github.com/Talan-Application/quiz-service/internal/transport/grpc/handler"
 )
 
 type Server struct {
@@ -19,7 +20,7 @@ type Server struct {
 	log        *zap.Logger
 }
 
-func NewServer(cfg config.GRPCConfig, log *zap.Logger, quizSvc service.IQuizService) *Server {
+func NewServer(cfg config.GRPCConfig, log *zap.Logger, quizSvc service.IQuizService, questionSvc service.IQuestionService, answerSvc service.IAnswerService) *Server {
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			loggingInterceptor(log),
@@ -27,7 +28,7 @@ func NewServer(cfg config.GRPCConfig, log *zap.Logger, quizSvc service.IQuizServ
 		),
 	)
 
-	handler := NewHandler(quizSvc, log)
+	handler := handler.NewHandler(quizSvc, questionSvc, answerSvc, log)
 	quizv1.RegisterQuizServiceServer(grpcServer, handler)
 
 	reflection.Register(grpcServer)
