@@ -3,7 +3,7 @@ module github.com/Talan-Application/quiz-service
 go 1.25.5
 
 require (
-	github.com/Talan-Application/proto-generation v0.0.0-20260508135900-25d7b722288b
+	github.com/Talan-Application/proto-generation v0.0.0-20260511112441-52326d7b7a34
 	github.com/jackc/pgx/v5 v5.9.2
 	github.com/joho/godotenv v1.5.1
 	github.com/spf13/viper v1.19.0

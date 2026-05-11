@@ -31,8 +31,14 @@ func main() {
 	defer db.Close()
 
 	quizRepo := postgres.NewQuizRepository(db)
+	questionRepo := postgres.NewQuestionRepository(db)
+	answerRepo := postgres.NewAnswerRepository(db)
+
 	quizSvc := service.NewQuizService(quizRepo, zapLog)
-	grpcSrv := grpcserver.NewServer(cfg.GRPC, zapLog, quizSvc)
+	questionSvc := service.NewQuestionService(questionRepo, zapLog)
+	answerSvc := service.NewAnswerService(answerRepo, zapLog)
+
+	grpcSrv := grpcserver.NewServer(cfg.GRPC, zapLog, quizSvc, questionSvc, answerSvc)
 
 	go func() {
 		if err := grpcSrv.Run(); err != nil {
