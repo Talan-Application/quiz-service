@@ -38,7 +38,7 @@ func main() {
 	questionSvc := service.NewQuestionService(questionRepo, zapLog)
 	answerSvc := service.NewAnswerService(answerRepo, zapLog)
 
-	grpcSrv := grpcserver.NewServer(cfg.GRPC, zapLog, quizSvc, questionSvc, answerSvc)
+	grpcSrv := grpcserver.NewServer(cfg.GRPC, cfg.JWT.SecretKey, zapLog, quizSvc, questionSvc, answerSvc)
 
 	go func() {
 		if err := grpcSrv.Run(); err != nil {
