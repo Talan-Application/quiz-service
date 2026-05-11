@@ -11,6 +11,7 @@ import (
 	quizv1 "github.com/Talan-Application/proto-generation/quiz/v1"
 	"github.com/Talan-Application/quiz-service/internal/domain"
 	"github.com/Talan-Application/quiz-service/internal/service"
+	"github.com/Talan-Application/quiz-service/internal/transport/grpc/ctxkeys"
 )
 
 type Handler struct {
@@ -26,10 +27,15 @@ func NewHandler(quizSvc service.IQuizService, questionSvc service.IQuestionServi
 }
 
 func (h *Handler) CreateQuiz(ctx context.Context, req *quizv1.CreateQuizRequest) (*quizv1.QuizResponse, error) {
+	userID, ok := ctx.Value(ctxkeys.UserIDKey).(int64)
+	if !ok || userID == 0 {
+		return nil, status.Error(codes.Unauthenticated, "authentication required")
+	}
+
 	quiz := &domain.Quiz{
 		Title:     req.GetTitle(),
 		Language:  req.GetLanguage(),
-		AuthorID:  req.GetAuthorId(),
+		AuthorID:  userID,
 		Type:      domain.QuizType(req.GetType()),
 		SubjectID: req.GetSubjectId(),
 		Status:    domain.QuizStatusDraft,

@@ -20,11 +20,12 @@ type Server struct {
 	log        *zap.Logger
 }
 
-func NewServer(cfg config.GRPCConfig, log *zap.Logger, quizSvc service.IQuizService, questionSvc service.IQuestionService, answerSvc service.IAnswerService) *Server {
+func NewServer(cfg config.GRPCConfig, jwtSecret string, log *zap.Logger, quizSvc service.IQuizService, questionSvc service.IQuestionService, answerSvc service.IAnswerService) *Server {
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			loggingInterceptor(log),
 			recoveryInterceptor(log),
+			authInterceptor(jwtSecret),
 		),
 	)
 

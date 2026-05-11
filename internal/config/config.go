@@ -12,6 +12,11 @@ type Config struct {
 	App      AppConfig      `mapstructure:"app"`
 	Database DatabaseConfig `mapstructure:"database"`
 	GRPC     GRPCConfig     `mapstructure:"grpc"`
+	JWT      JWTConfig      `mapstructure:"jwt"`
+}
+
+type JWTConfig struct {
+	SecretKey string `mapstructure:"secretKey"`
 }
 
 type AppConfig struct {

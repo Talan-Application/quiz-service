@@ -12,3 +12,6 @@ database:
 
 grpc:
     port: ${GRPC_PORT}
+
+jwt:
+    secretKey: ${JWT_SECRET}
