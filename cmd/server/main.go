@@ -33,12 +33,14 @@ func main() {
 	quizRepo := postgres.NewQuizRepository(db)
 	questionRepo := postgres.NewQuestionRepository(db)
 	answerRepo := postgres.NewAnswerRepository(db)
+	resultRepo := postgres.NewQuizResultRepository(db)
 
 	quizSvc := service.NewQuizService(quizRepo, zapLog)
 	questionSvc := service.NewQuestionService(questionRepo, zapLog)
 	answerSvc := service.NewAnswerService(answerRepo, zapLog)
+	resultSvc := service.NewQuizResultService(resultRepo, zapLog)
 
-	grpcSrv := grpcserver.NewServer(cfg.GRPC, cfg.JWT.SecretKey, zapLog, quizSvc, questionSvc, answerSvc)
+	grpcSrv := grpcserver.NewServer(cfg.GRPC, cfg.JWT.SecretKey, zapLog, quizSvc, questionSvc, answerSvc, resultSvc)
 
 	go func() {
 		if err := grpcSrv.Run(); err != nil {
