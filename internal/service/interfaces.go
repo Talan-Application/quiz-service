@@ -29,3 +29,9 @@ type IAnswerService interface {
 	Update(ctx context.Context, id int64, answer *domain.Answer) (*domain.Answer, error)
 	Delete(ctx context.Context, id int64) error
 }
+
+type IQuizResultService interface {
+	Submit(ctx context.Context, result *domain.QuizResult) (*domain.QuizResult, error)
+	GetByQuizAndUser(ctx context.Context, quizID, userID int64) ([]domain.QuizResult, error)
+	GetByQuiz(ctx context.Context, quizID int64) ([]domain.QuizResult, error)
+}

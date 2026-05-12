@@ -29,3 +29,9 @@ type AnswerRepository interface {
 	GetAll(ctx context.Context, questionID int64, limit *int, offset *int) ([]domain.Answer, error)
 	GetById(ctx context.Context, id int64) (*domain.Answer, error)
 }
+
+type QuizResultRepository interface {
+	Save(ctx context.Context, result *domain.QuizResult) (*domain.QuizResult, error)
+	GetByQuizAndUser(ctx context.Context, quizID, userID int64) ([]domain.QuizResult, error)
+	GetByQuiz(ctx context.Context, quizID int64) ([]domain.QuizResult, error)
+}

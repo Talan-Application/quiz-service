@@ -16,6 +16,8 @@ import (
 
 type Handler struct {
 	quizv1.UnimplementedQuizServiceServer
+	quizv1.UnimplementedQuestionServiceServer
+	quizv1.UnimplementedAnswerServiceServer
 	quizSvc     service.IQuizService
 	questionSvc service.IQuestionService
 	answerSvc   service.IAnswerService
