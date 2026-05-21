@@ -13,13 +13,11 @@ import (
 	"github.com/Talan-Application/quiz-service/internal/transport/grpc/ctxkeys"
 )
 
-// QuizResultHandler handles QuizResultService gRPC calls.
-// It resolves answers from the answer service, saves the result, and returns a full evaluation.
 type QuizResultHandler struct {
 	quizv1.UnimplementedQuizResultServiceServer
-	answerSvc    service.IAnswerService
-	resultSvc    service.IQuizResultService
-	log          *zap.Logger
+	answerSvc service.IAnswerService
+	resultSvc service.IQuizResultService
+	log       *zap.Logger
 }
 
 func NewQuizResultHandler(
@@ -34,7 +32,6 @@ func NewQuizResultHandler(
 	}
 }
 
-// SubmitQuiz evaluates the submitted answers, persists the result, and returns the full breakdown.
 func (h *QuizResultHandler) SubmitQuiz(ctx context.Context, req *quizv1.SubmitQuizRequest) (*quizv1.SubmitQuizResponse, error) {
 	userID, ok := ctx.Value(ctxkeys.UserIDKey).(int64)
 	if !ok || userID == 0 {
@@ -120,7 +117,6 @@ func (h *QuizResultHandler) SubmitQuiz(ctx context.Context, req *quizv1.SubmitQu
 	}, nil
 }
 
-// GetQuizResults returns persisted result history for a quiz, optionally filtered by user.
 func (h *QuizResultHandler) GetQuizResults(ctx context.Context, req *quizv1.GetQuizResultsRequest) (*quizv1.GetQuizResultsResponse, error) {
 	var (
 		results []domain.QuizResult
@@ -156,4 +152,3 @@ func (h *QuizResultHandler) toResultGRPCError(err error) error {
 	h.log.Error("quiz result service error", zap.Error(err))
 	return status.Error(codes.Internal, "internal error")
 }
-
