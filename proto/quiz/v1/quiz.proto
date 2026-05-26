@@ -8,6 +8,8 @@ service QuizService {
   rpc CreateQuiz(CreateQuizRequest)       returns (QuizResponse);
   rpc GetQuiz(GetQuizRequest)             returns (QuizResponse);
   rpc GetAllQuizzes(GetAllQuizzesRequest) returns (GetAllQuizzesResponse);
+  rpc GetMyQuizzes(GetMyQuizzesRequest)   returns (GetAllQuizzesResponse);
+  rpc PublishQuiz(PublishQuizRequest)     returns (QuizResponse);
   rpc UpdateQuiz(UpdateQuizRequest)       returns (QuizResponse);
   rpc DeleteQuiz(DeleteQuizRequest)       returns (DeleteQuizResponse);
 }
@@ -52,8 +54,18 @@ message GetQuizRequest {
 }
 
 message GetAllQuizzesRequest {
+  optional int32  limit  = 1;
+  optional int32  offset = 2;
+  optional string status = 3;
+}
+
+message GetMyQuizzesRequest {
   optional int32 limit  = 1;
   optional int32 offset = 2;
+}
+
+message PublishQuizRequest {
+  int64 id = 1;
 }
 
 message DeleteQuizRequest {

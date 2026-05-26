@@ -35,10 +35,28 @@ func (s *QuizService) GetByID(ctx context.Context, id int64) (*domain.Quiz, erro
 	return quiz, nil
 }
 
-func (s *QuizService) GetAll(ctx context.Context, limit *int, offset *int) ([]domain.Quiz, error) {
-	quizzes, err := s.repo.GetAll(ctx, limit, offset)
+func (s *QuizService) GetAll(ctx context.Context, status *domain.QuizStatus, limit *int, offset *int) ([]domain.Quiz, error) {
+	quizzes, err := s.repo.GetAll(ctx, status, limit, offset)
 	if err != nil {
 		s.logger.Error("failed to get quizzes", zap.Error(err))
+		return nil, err
+	}
+	return quizzes, nil
+}
+
+func (s *QuizService) Publish(ctx context.Context, id int64) (*domain.Quiz, error) {
+	quiz, err := s.repo.Publish(ctx, id)
+	if err != nil {
+		s.logger.Error("failed to publish quiz", zap.Int64("id", id), zap.Error(err))
+		return nil, err
+	}
+	return quiz, nil
+}
+
+func (s *QuizService) GetAllByAuthor(ctx context.Context, authorID int64, limit *int, offset *int) ([]domain.Quiz, error) {
+	quizzes, err := s.repo.GetAllByAuthor(ctx, authorID, limit, offset)
+	if err != nil {
+		s.logger.Error("failed to get quizzes by author", zap.Int64("author_id", authorID), zap.Error(err))
 		return nil, err
 	}
 	return quizzes, nil

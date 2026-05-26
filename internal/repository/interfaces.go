@@ -10,8 +10,10 @@ type QuizRepository interface {
 	Create(ctx context.Context, quiz *domain.Quiz) (*domain.Quiz, error)
 	Delete(ctx context.Context, id int64) error
 	Update(ctx context.Context, id int64, quiz *domain.Quiz) (*domain.Quiz, error)
-	GetAll(ctx context.Context, limit *int, offset *int) ([]domain.Quiz, error)
+	GetAll(ctx context.Context, status *domain.QuizStatus, limit *int, offset *int) ([]domain.Quiz, error)
 	GetById(ctx context.Context, id int64) (*domain.Quiz, error)
+	Publish(ctx context.Context, id int64) (*domain.Quiz, error)
+	GetAllByAuthor(ctx context.Context, authorID int64, limit *int, offset *int) ([]domain.Quiz, error)
 }
 
 type QuestionRepository interface {

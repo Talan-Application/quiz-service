@@ -3,14 +3,13 @@ module github.com/Talan-Application/quiz-service
 go 1.25.5
 
 require (
-	github.com/Talan-Application/proto-generation v0.0.0-20260512143711-4339cc053494
+	github.com/Talan-Application/proto-generation v0.0.0-20260525160653-76e3799d9c54
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/jackc/pgx/v5 v5.9.2
 	github.com/joho/godotenv v1.5.1
 	github.com/spf13/viper v1.19.0
 	go.uber.org/zap v1.27.0
 	google.golang.org/grpc v1.79.3
-	google.golang.org/protobuf v1.36.10
 )
 
 require (
@@ -36,6 +35,7 @@ require (
 	golang.org/x/sys v0.39.0 // indirect
 	golang.org/x/text v0.32.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 // indirect
+	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

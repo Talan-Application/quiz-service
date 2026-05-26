@@ -62,6 +62,7 @@ func (h *Handler) GetQuiz(ctx context.Context, req *quizv1.GetQuizRequest) (*qui
 
 func (h *Handler) GetAllQuizzes(ctx context.Context, req *quizv1.GetAllQuizzesRequest) (*quizv1.GetAllQuizzesResponse, error) {
 	var limit, offset *int
+	var status *domain.QuizStatus
 
 	if req.Limit != nil {
 		v := int(req.GetLimit())
@@ -71,8 +72,50 @@ func (h *Handler) GetAllQuizzes(ctx context.Context, req *quizv1.GetAllQuizzesRe
 		v := int(req.GetOffset())
 		offset = &v
 	}
+	if req.Status != nil {
+		s := domain.QuizStatus(req.GetStatus())
+		status = &s
+	}
 
-	quizzes, err := h.quizSvc.GetAll(ctx, limit, offset)
+	quizzes, err := h.quizSvc.GetAll(ctx, status, limit, offset)
+	if err != nil {
+		return nil, h.toGRPCError(err)
+	}
+
+	protos := make([]*quizv1.QuizResponse, len(quizzes))
+	for i := range quizzes {
+		protos[i] = toProto(&quizzes[i])
+	}
+
+	return &quizv1.GetAllQuizzesResponse{Quizzes: protos}, nil
+}
+
+func (h *Handler) PublishQuiz(ctx context.Context, req *quizv1.PublishQuizRequest) (*quizv1.QuizResponse, error) {
+	quiz, err := h.quizSvc.Publish(ctx, req.GetId())
+	if err != nil {
+		return nil, h.toGRPCError(err)
+	}
+
+	return toProto(quiz), nil
+}
+
+func (h *Handler) GetMyQuizzes(ctx context.Context, req *quizv1.GetMyQuizzesRequest) (*quizv1.GetAllQuizzesResponse, error) {
+	userID, ok := ctx.Value(ctxkeys.UserIDKey).(int64)
+	if !ok || userID == 0 {
+		return nil, status.Error(codes.Unauthenticated, "authentication required")
+	}
+
+	var limit, offset *int
+	if req.Limit != nil {
+		v := int(req.GetLimit())
+		limit = &v
+	}
+	if req.Offset != nil {
+		v := int(req.GetOffset())
+		offset = &v
+	}
+
+	quizzes, err := h.quizSvc.GetAllByAuthor(ctx, userID, limit, offset)
 	if err != nil {
 		return nil, h.toGRPCError(err)
 	}

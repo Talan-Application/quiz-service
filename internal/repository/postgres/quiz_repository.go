@@ -74,11 +74,25 @@ func (r *QuizRepository) Update(ctx context.Context, id int64, quiz *domain.Quiz
 	return quiz, nil
 }
 
-func (r *QuizRepository) GetAll(ctx context.Context, limit *int, offset *int) ([]domain.Quiz, error) {
-	query := `SELECT id, title, language, author_id, status, type, subject_id, created_at, updated_at
-			FROM quizzes ORDER BY id LIMIT $1 OFFSET $2`
+func (r *QuizRepository) GetAll(ctx context.Context, status *domain.QuizStatus, limit *int, offset *int) ([]domain.Quiz, error) {
+	var (
+		rows pgx.Rows
+		err  error
+	)
 
-	rows, err := r.db.Query(ctx, query, limit, offset)
+	if status == nil {
+		rows, err = r.db.Query(ctx,
+			`SELECT id, title, language, author_id, status, type, subject_id, created_at, updated_at
+			 FROM quizzes ORDER BY id LIMIT $1 OFFSET $2`,
+			limit, offset,
+		)
+	} else {
+		rows, err = r.db.Query(ctx,
+			`SELECT id, title, language, author_id, status, type, subject_id, created_at, updated_at
+			 FROM quizzes WHERE status = $1::quiz_status ORDER BY id LIMIT $2 OFFSET $3`,
+			string(*status), limit, offset,
+		)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("select quiz: %w", err)
 	}
@@ -87,14 +101,58 @@ func (r *QuizRepository) GetAll(ctx context.Context, limit *int, offset *int) ([
 	var quizzes []domain.Quiz
 	for rows.Next() {
 		var quiz domain.Quiz
-
-		err := rows.Scan(&quiz.ID, &quiz.Title, &quiz.Language, &quiz.AuthorID,
-			&quiz.Status, &quiz.Type, &quiz.SubjectID, &quiz.CreatedAt, &quiz.UpdatedAt)
-
-		if err != nil {
+		if err := rows.Scan(&quiz.ID, &quiz.Title, &quiz.Language, &quiz.AuthorID,
+			&quiz.Status, &quiz.Type, &quiz.SubjectID, &quiz.CreatedAt, &quiz.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("scan quiz: %w", err)
 		}
+		quizzes = append(quizzes, quiz)
+	}
 
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("next rows: %w", err)
+	}
+
+	return quizzes, nil
+}
+
+func (r *QuizRepository) Publish(ctx context.Context, id int64) (*domain.Quiz, error) {
+	query := `UPDATE quizzes SET status = 'published', updated_at = NOW()
+			WHERE id = $1
+			RETURNING id, title, language, author_id, status, type, subject_id, created_at, updated_at`
+
+	quiz := &domain.Quiz{}
+	err := r.db.QueryRow(ctx, query, id).
+		Scan(&quiz.ID, &quiz.Title, &quiz.Language, &quiz.AuthorID,
+			&quiz.Status, &quiz.Type, &quiz.SubjectID, &quiz.CreatedAt, &quiz.UpdatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("publish quiz: %w", domain.ErrQuizNotFound)
+		}
+		return nil, fmt.Errorf("publish quiz: %w", err)
+	}
+
+	return quiz, nil
+}
+
+func (r *QuizRepository) GetAllByAuthor(ctx context.Context, authorID int64, limit *int, offset *int) ([]domain.Quiz, error) {
+	query := `SELECT id, title, language, author_id, status, type, subject_id, created_at, updated_at
+			FROM quizzes
+			WHERE author_id = $1
+			ORDER BY id LIMIT $2 OFFSET $3`
+
+	rows, err := r.db.Query(ctx, query, authorID, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("select quiz by author: %w", err)
+	}
+	defer rows.Close()
+
+	var quizzes []domain.Quiz
+	for rows.Next() {
+		var quiz domain.Quiz
+		if err := rows.Scan(&quiz.ID, &quiz.Title, &quiz.Language, &quiz.AuthorID,
+			&quiz.Status, &quiz.Type, &quiz.SubjectID, &quiz.CreatedAt, &quiz.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scan quiz: %w", err)
+		}
 		quizzes = append(quizzes, quiz)
 	}
 
