@@ -1,5 +1,5 @@
-github.com/Talan-Application/proto-generation v0.0.0-20260525160653-76e3799d9c54 h1:ePPde1dRSOrjMmtJEbpi2/gIqPlStdU31+/45+BmIt4=
-github.com/Talan-Application/proto-generation v0.0.0-20260525160653-76e3799d9c54/go.mod h1:blSwQqtrfUcjzC2NFdtU1SFAyEQUTx6kWbOc7i7HsUI=
+github.com/Talan-Application/proto-generation v0.0.0-20260602150319-2b1b73283897 h1:QabvpIYM1PwbTy+cypOv9yZ8mSUN3dpbR+J/v8JInzo=
+github.com/Talan-Application/proto-generation v0.0.0-20260602150319-2b1b73283897/go.mod h1:blSwQqtrfUcjzC2NFdtU1SFAyEQUTx6kWbOc7i7HsUI=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

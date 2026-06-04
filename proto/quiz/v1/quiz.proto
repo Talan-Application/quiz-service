@@ -2,14 +2,14 @@ syntax = "proto3";
 
 package quiz.v1;
 
-option go_package = "github.com/Talan-Application/proto-generation/quiz/v1;quizv1";
+option go_package = "github.com/Talan-Application/proto-generation/gen/quiz/v1;quizv1";
 
 service QuizService {
   rpc CreateQuiz(CreateQuizRequest)       returns (QuizResponse);
   rpc GetQuiz(GetQuizRequest)             returns (QuizResponse);
   rpc GetAllQuizzes(GetAllQuizzesRequest) returns (GetAllQuizzesResponse);
   rpc GetMyQuizzes(GetMyQuizzesRequest)   returns (GetAllQuizzesResponse);
-  rpc PublishQuiz(PublishQuizRequest)     returns (QuizResponse);
+  rpc PublishQuiz(PublishQuizRequest)     returns (PublishQuizResponse);
   rpc UpdateQuiz(UpdateQuizRequest)       returns (QuizResponse);
   rpc DeleteQuiz(DeleteQuizRequest)       returns (DeleteQuizResponse);
 }
@@ -39,7 +39,7 @@ message CreateQuizRequest {
   string title      = 1;
   string language   = 2;
   string type       = 3;
-  int64  subject_id = 4;
+  int64  common_subject_id = 4;
 }
 
 message UpdateQuizRequest {
@@ -79,7 +79,7 @@ message QuizResponse {
   int64  author_id  = 4;
   string status     = 5;
   string type       = 6;
-  int64  subject_id = 7;
+  int64  common_subject_id = 7;
   int64  created_at = 8;
   int64  updated_at = 9;
 }
@@ -91,6 +91,8 @@ message GetAllQuizzesResponse {
 message DeleteQuizResponse {
   string message = 1;
 }
+
+message PublishQuizResponse {}
 
 message CreateQuestionRequest {
   int64  quiz_id          = 1;

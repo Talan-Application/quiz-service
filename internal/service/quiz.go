@@ -44,13 +44,12 @@ func (s *QuizService) GetAll(ctx context.Context, status *domain.QuizStatus, lim
 	return quizzes, nil
 }
 
-func (s *QuizService) Publish(ctx context.Context, id int64) (*domain.Quiz, error) {
-	quiz, err := s.repo.Publish(ctx, id)
-	if err != nil {
+func (s *QuizService) Publish(ctx context.Context, id int64) error {
+	if err := s.repo.Publish(ctx, id); err != nil {
 		s.logger.Error("failed to publish quiz", zap.Int64("id", id), zap.Error(err))
-		return nil, err
+		return err
 	}
-	return quiz, nil
+	return nil
 }
 
 func (s *QuizService) GetAllByAuthor(ctx context.Context, authorID int64, limit *int, offset *int) ([]domain.Quiz, error) {

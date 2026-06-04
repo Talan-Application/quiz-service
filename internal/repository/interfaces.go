@@ -12,7 +12,7 @@ type QuizRepository interface {
 	Update(ctx context.Context, id int64, quiz *domain.Quiz) (*domain.Quiz, error)
 	GetAll(ctx context.Context, status *domain.QuizStatus, limit *int, offset *int) ([]domain.Quiz, error)
 	GetById(ctx context.Context, id int64) (*domain.Quiz, error)
-	Publish(ctx context.Context, id int64) (*domain.Quiz, error)
+	Publish(ctx context.Context, id int64) error
 	GetAllByAuthor(ctx context.Context, authorID int64, limit *int, offset *int) ([]domain.Quiz, error)
 }
 

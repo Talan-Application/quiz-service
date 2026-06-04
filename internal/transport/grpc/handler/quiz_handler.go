@@ -35,12 +35,12 @@ func (h *Handler) CreateQuiz(ctx context.Context, req *quizv1.CreateQuizRequest)
 	}
 
 	quiz := &domain.Quiz{
-		Title:     req.GetTitle(),
-		Language:  req.GetLanguage(),
-		AuthorID:  userID,
-		Type:      domain.QuizType(req.GetType()),
-		SubjectID: req.GetSubjectId(),
-		Status:    domain.QuizStatusDraft,
+		Title:           req.GetTitle(),
+		Language:        req.GetLanguage(),
+		AuthorID:        userID,
+		Type:            domain.QuizType(req.GetType()),
+		CommonSubjectID: req.GetCommonSubjectId(),
+		Status:          domain.QuizStatusDraft,
 	}
 
 	created, err := h.quizSvc.Create(ctx, quiz)
@@ -90,13 +90,12 @@ func (h *Handler) GetAllQuizzes(ctx context.Context, req *quizv1.GetAllQuizzesRe
 	return &quizv1.GetAllQuizzesResponse{Quizzes: protos}, nil
 }
 
-func (h *Handler) PublishQuiz(ctx context.Context, req *quizv1.PublishQuizRequest) (*quizv1.QuizResponse, error) {
-	quiz, err := h.quizSvc.Publish(ctx, req.GetId())
-	if err != nil {
+func (h *Handler) PublishQuiz(ctx context.Context, req *quizv1.PublishQuizRequest) (*quizv1.PublishQuizResponse, error) {
+	if err := h.quizSvc.Publish(ctx, req.GetId()); err != nil {
 		return nil, h.toGRPCError(err)
 	}
 
-	return toProto(quiz), nil
+	return &quizv1.PublishQuizResponse{}, nil
 }
 
 func (h *Handler) GetMyQuizzes(ctx context.Context, req *quizv1.GetMyQuizzesRequest) (*quizv1.GetAllQuizzesResponse, error) {
@@ -153,15 +152,15 @@ func (h *Handler) DeleteQuiz(ctx context.Context, req *quizv1.DeleteQuizRequest)
 
 func toProto(q *domain.Quiz) *quizv1.QuizResponse {
 	return &quizv1.QuizResponse{
-		Id:        q.ID,
-		Title:     q.Title,
-		Language:  q.Language,
-		AuthorId:  q.AuthorID,
-		Status:    string(q.Status),
-		Type:      string(q.Type),
-		SubjectId: q.SubjectID,
-		CreatedAt: q.CreatedAt.Unix(),
-		UpdatedAt: q.UpdatedAt.Unix(),
+		Id:              q.ID,
+		Title:           q.Title,
+		Language:        q.Language,
+		AuthorId:        q.AuthorID,
+		Status:          string(q.Status),
+		Type:            string(q.Type),
+		CommonSubjectId: q.CommonSubjectID,
+		CreatedAt:       q.CreatedAt.Unix(),
+		UpdatedAt:       q.UpdatedAt.Unix(),
 	}
 }
 
