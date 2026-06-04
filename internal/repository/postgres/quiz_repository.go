@@ -20,8 +20,8 @@ func NewQuizRepository(db *pgxpool.Pool) *QuizRepository {
 }
 
 func (r *QuizRepository) Create(ctx context.Context, quiz *domain.Quiz) (*domain.Quiz, error) {
-	query := `INSERT INTO quizzes (title, language, author_id, type, common_subject_id, created_at, updated_at)
-				VALUES ($1, $2, $3, $4, $5, NOW(), NOW()) RETURNING id, created_at, updated_at`
+	query := `INSERT INTO quizzes (title, language, author_id, type, common_subject_id, is_ent_standard, created_at, updated_at)
+				VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING id, created_at, updated_at`
 
 	err := r.db.QueryRow(
 		ctx,
@@ -31,6 +31,7 @@ func (r *QuizRepository) Create(ctx context.Context, quiz *domain.Quiz) (*domain
 		quiz.AuthorID,
 		quiz.Type,
 		quiz.CommonSubjectID,
+		quiz.IsEntStandard,
 	).Scan(&quiz.ID, &quiz.CreatedAt, &quiz.UpdatedAt)
 
 	if err != nil {
@@ -59,10 +60,10 @@ func (r *QuizRepository) Delete(ctx context.Context, id int64) error {
 }
 
 func (r *QuizRepository) Update(ctx context.Context, id int64, quiz *domain.Quiz) (*domain.Quiz, error) {
-	query := `UPDATE quizzes SET title = $1, language = $2, type = $3,
-	 		updated_at = NOW() WHERE id = $4 RETURNING updated_at`
+	query := `UPDATE quizzes SET title = $1, language = $2, type = $3, is_ent_standard = $4,
+	 		updated_at = NOW() WHERE id = $5 RETURNING updated_at`
 
-	err := r.db.QueryRow(ctx, query, quiz.Title, quiz.Language, quiz.Type, id).
+	err := r.db.QueryRow(ctx, query, quiz.Title, quiz.Language, quiz.Type, quiz.IsEntStandard, id).
 		Scan(&quiz.UpdatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -82,13 +83,13 @@ func (r *QuizRepository) GetAll(ctx context.Context, status *domain.QuizStatus, 
 
 	if status == nil {
 		rows, err = r.db.Query(ctx,
-			`SELECT id, title, language, author_id, status, type, common_subject_id, created_at, updated_at
+			`SELECT id, title, language, author_id, status, type, common_subject_id, is_ent_standard, created_at, updated_at
 			 FROM quizzes ORDER BY id LIMIT $1 OFFSET $2`,
 			limit, offset,
 		)
 	} else {
 		rows, err = r.db.Query(ctx,
-			`SELECT id, title, language, author_id, status, type, common_subject_id, created_at, updated_at
+			`SELECT id, title, language, author_id, status, type, common_subject_id, is_ent_standard, created_at, updated_at
 			 FROM quizzes WHERE status = $1::quiz_status ORDER BY id LIMIT $2 OFFSET $3`,
 			string(*status), limit, offset,
 		)
@@ -102,7 +103,7 @@ func (r *QuizRepository) GetAll(ctx context.Context, status *domain.QuizStatus, 
 	for rows.Next() {
 		var quiz domain.Quiz
 		if err := rows.Scan(&quiz.ID, &quiz.Title, &quiz.Language, &quiz.AuthorID,
-			&quiz.Status, &quiz.Type, &quiz.CommonSubjectID, &quiz.CreatedAt, &quiz.UpdatedAt); err != nil {
+			&quiz.Status, &quiz.Type, &quiz.CommonSubjectID, &quiz.IsEntStandard, &quiz.CreatedAt, &quiz.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("scan quiz: %w", err)
 		}
 		quizzes = append(quizzes, quiz)
@@ -130,7 +131,7 @@ func (r *QuizRepository) Publish(ctx context.Context, id int64) error {
 }
 
 func (r *QuizRepository) GetAllByAuthor(ctx context.Context, authorID int64, limit *int, offset *int) ([]domain.Quiz, error) {
-	query := `SELECT id, title, language, author_id, status, type, common_subject_id, created_at, updated_at
+	query := `SELECT id, title, language, author_id, status, type, common_subject_id, is_ent_standard, created_at, updated_at
 			FROM quizzes
 			WHERE author_id = $1
 			ORDER BY id LIMIT $2 OFFSET $3`
@@ -145,7 +146,7 @@ func (r *QuizRepository) GetAllByAuthor(ctx context.Context, authorID int64, lim
 	for rows.Next() {
 		var quiz domain.Quiz
 		if err := rows.Scan(&quiz.ID, &quiz.Title, &quiz.Language, &quiz.AuthorID,
-			&quiz.Status, &quiz.Type, &quiz.CommonSubjectID, &quiz.CreatedAt, &quiz.UpdatedAt); err != nil {
+			&quiz.Status, &quiz.Type, &quiz.CommonSubjectID, &quiz.IsEntStandard, &quiz.CreatedAt, &quiz.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("scan quiz: %w", err)
 		}
 		quizzes = append(quizzes, quiz)
@@ -159,13 +160,13 @@ func (r *QuizRepository) GetAllByAuthor(ctx context.Context, authorID int64, lim
 }
 
 func (r *QuizRepository) GetById(ctx context.Context, id int64) (*domain.Quiz, error) {
-	query := `SELECT id, title, language, author_id, status, type, common_subject_id, created_at, updated_at
+	query := `SELECT id, title, language, author_id, status, type, common_subject_id, is_ent_standard, created_at, updated_at
 			FROM quizzes WHERE id = $1`
 
 	quiz := &domain.Quiz{}
 	err := r.db.QueryRow(ctx, query, id).
 		Scan(&quiz.ID, &quiz.Title, &quiz.Language, &quiz.AuthorID, &quiz.Status,
-			&quiz.Type, &quiz.CommonSubjectID, &quiz.CreatedAt, &quiz.UpdatedAt)
+			&quiz.Type, &quiz.CommonSubjectID, &quiz.IsEntStandard, &quiz.CreatedAt, &quiz.UpdatedAt)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

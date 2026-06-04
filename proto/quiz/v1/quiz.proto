@@ -36,17 +36,19 @@ service QuizResultService {
 }
 
 message CreateQuizRequest {
-  string title      = 1;
-  string language   = 2;
-  string type       = 3;
+  string title             = 1;
+  string language          = 2;
+  string type              = 3;
   int64  common_subject_id = 4;
+  bool   is_ent_standard   = 5;
 }
 
 message UpdateQuizRequest {
-  int64  id       = 1;
-  string title    = 2;
-  string language = 3;
-  string type     = 4;
+  int64  id               = 1;
+  string title            = 2;
+  string language         = 3;
+  string type             = 4;
+  bool   is_ent_standard  = 5;
 }
 
 message GetQuizRequest {
@@ -73,15 +75,16 @@ message DeleteQuizRequest {
 }
 
 message QuizResponse {
-  int64  id         = 1;
-  string title      = 2;
-  string language   = 3;
-  int64  author_id  = 4;
-  string status     = 5;
-  string type       = 6;
+  int64  id                = 1;
+  string title             = 2;
+  string language          = 3;
+  int64  author_id         = 4;
+  string status            = 5;
+  string type              = 6;
   int64  common_subject_id = 7;
-  int64  created_at = 8;
-  int64  updated_at = 9;
+  int64  created_at        = 8;
+  int64  updated_at        = 9;
+  bool   is_ent_standard   = 10;
 }
 
 message GetAllQuizzesResponse {

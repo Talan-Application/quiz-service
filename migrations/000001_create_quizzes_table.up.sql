@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS quizzes
     status            quiz_status  NOT NULL DEFAULT 'draft',
     type              quiz_type    NOT NULL,
     common_subject_id BIGINT       NOT NULL,
+    is_ent_standard   BOOLEAN      NOT NULL DEFAULT FALSE,
     created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );

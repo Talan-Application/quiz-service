@@ -10,6 +10,7 @@ type Quiz struct {
 	Status          QuizStatus
 	Type            QuizType
 	CommonSubjectID int64
+	IsEntStandard   bool
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 }

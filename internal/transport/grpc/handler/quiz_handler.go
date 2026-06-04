@@ -40,6 +40,7 @@ func (h *Handler) CreateQuiz(ctx context.Context, req *quizv1.CreateQuizRequest)
 		AuthorID:        userID,
 		Type:            domain.QuizType(req.GetType()),
 		CommonSubjectID: req.GetCommonSubjectId(),
+		IsEntStandard:   req.GetIsEntStandard(),
 		Status:          domain.QuizStatusDraft,
 	}
 
@@ -129,9 +130,10 @@ func (h *Handler) GetMyQuizzes(ctx context.Context, req *quizv1.GetMyQuizzesRequ
 
 func (h *Handler) UpdateQuiz(ctx context.Context, req *quizv1.UpdateQuizRequest) (*quizv1.QuizResponse, error) {
 	quiz := &domain.Quiz{
-		Title:    req.GetTitle(),
-		Language: req.GetLanguage(),
-		Type:     domain.QuizType(req.GetType()),
+		Title:         req.GetTitle(),
+		Language:      req.GetLanguage(),
+		Type:          domain.QuizType(req.GetType()),
+		IsEntStandard: req.GetIsEntStandard(),
 	}
 
 	updated, err := h.quizSvc.Update(ctx, req.GetId(), quiz)
@@ -159,6 +161,7 @@ func toProto(q *domain.Quiz) *quizv1.QuizResponse {
 		Status:          string(q.Status),
 		Type:            string(q.Type),
 		CommonSubjectId: q.CommonSubjectID,
+		IsEntStandard:   q.IsEntStandard,
 		CreatedAt:       q.CreatedAt.Unix(),
 		UpdatedAt:       q.UpdatedAt.Unix(),
 	}
