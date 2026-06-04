@@ -34,7 +34,7 @@ func NewServer(cfg config.GRPCConfig, jwtSecret string, log *zap.Logger, quizSvc
 	quizv1.RegisterQuestionServiceServer(grpcServer, h)
 	quizv1.RegisterAnswerServiceServer(grpcServer, h)
 
-	resultHandler := handler.NewQuizResultHandler(answerSvc, resultSvc, log)
+	resultHandler := handler.NewQuizResultHandler(resultSvc, log)
 	quizv1.RegisterQuizResultServiceServer(grpcServer, resultHandler)
 
 	reflection.Register(grpcServer)

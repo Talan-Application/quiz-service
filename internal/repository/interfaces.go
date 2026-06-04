@@ -22,6 +22,7 @@ type QuestionRepository interface {
 	Update(ctx context.Context, id int64, question *domain.Question) (*domain.Question, error)
 	GetAll(ctx context.Context, quizID int64, limit *int, offset *int) ([]domain.Question, error)
 	GetById(ctx context.Context, id int64) (*domain.Question, error)
+	GetByQuizId(ctx context.Context, quizId int64) ([]domain.Question, error)
 }
 
 type AnswerRepository interface {
@@ -30,6 +31,7 @@ type AnswerRepository interface {
 	Update(ctx context.Context, id int64, answer *domain.Answer) (*domain.Answer, error)
 	GetAll(ctx context.Context, questionID int64, limit *int, offset *int) ([]domain.Answer, error)
 	GetById(ctx context.Context, id int64) (*domain.Answer, error)
+	GetByQuestionIDs(ctx context.Context, questionIDs []int64) ([]domain.Answer, error)
 }
 
 type QuizResultRepository interface {

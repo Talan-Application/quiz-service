@@ -12,3 +12,9 @@ type Question struct {
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 }
+
+type QuestionWithCorrectAnswer struct {
+	ID                int64
+	CorrectAnswerIDs  []int64
+	TotalAnswersCount int64
+}

@@ -191,28 +191,32 @@ message DeleteAnswerResponse {
 }
 
 message AnswerSubmission {
-  int64 question_id = 1;
-  int64 answer_id   = 2;
+  int64          question_id = 1;
+  repeated int64 answer_ids  = 2;
 }
 
 message SubmitQuizRequest {
-  int64                    quiz_id = 1;
+  int64                     quiz_id = 1;
   repeated AnswerSubmission answers = 2;
 }
 
 message QuestionResult {
-  int64 question_id        = 1;
-  int64 selected_answer_id = 2;
-  int64 correct_answer_id  = 3;
-  bool  is_correct         = 4;
+  int64          question_id         = 1;
+  repeated int64 selected_answer_ids = 2;
+  repeated int64 correct_answer_ids  = 3;
+  double         score               = 4;
+  double         max_score           = 5;
 }
 
 message SubmitQuizResponse {
-  int64                   result_id       = 1;
-  int32                   total_questions = 2;
-  int32                   correct_answers = 3;
-  double                  score           = 4;
-  repeated QuestionResult results         = 5;
+  int64                   result_id              = 1;
+  int32                   total_questions_count  = 2;
+  int32                   correct_answers_count  = 3;
+  int32                   incorrect_answers_count = 4;
+  int32                   unanswered_questions   = 5;
+  double                  score                  = 6;
+  double                  max_score              = 7;
+  repeated QuestionResult results                = 8;
 }
 
 message GetQuizResultsRequest {
@@ -221,13 +225,16 @@ message GetQuizResultsRequest {
 }
 
 message QuizResultSummary {
-  int64  id              = 1;
-  int64  quiz_id         = 2;
-  int64  user_id         = 3;
-  double score           = 4;
-  int32  total_questions = 5;
-  int32  correct_answers = 6;
-  int64  submitted_at    = 7;
+  int64  id                     = 1;
+  int64  quiz_id                = 2;
+  int64  user_id                = 3;
+  double score                  = 4;
+  double max_score              = 5;
+  int32  total_questions_count  = 6;
+  int32  correct_answers_count  = 7;
+  int32  incorrect_answers_count = 8;
+  int32  unanswered_questions   = 9;
+  int64  submitted_at           = 10;
 }
 
 message GetQuizResultsResponse {

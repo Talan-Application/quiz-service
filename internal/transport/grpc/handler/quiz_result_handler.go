@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"errors"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -15,18 +16,15 @@ import (
 
 type QuizResultHandler struct {
 	quizv1.UnimplementedQuizResultServiceServer
-	answerSvc service.IAnswerService
 	resultSvc service.IQuizResultService
 	log       *zap.Logger
 }
 
 func NewQuizResultHandler(
-	answerSvc service.IAnswerService,
 	resultSvc service.IQuizResultService,
 	log *zap.Logger,
 ) *QuizResultHandler {
 	return &QuizResultHandler{
-		answerSvc: answerSvc,
 		resultSvc: resultSvc,
 		log:       log,
 	}
@@ -38,96 +36,36 @@ func (h *QuizResultHandler) SubmitQuiz(ctx context.Context, req *quizv1.SubmitQu
 		return nil, status.Error(codes.Unauthenticated, "authentication required")
 	}
 
-	if len(req.GetAnswers()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "answers must not be empty")
-	}
-
-	resultAnswers := make([]domain.QuizResultAnswer, 0, len(req.GetAnswers()))
-	protoResults := make([]*quizv1.QuestionResult, 0, len(req.GetAnswers()))
-	correctCount := 0
-
-	for _, sub := range req.GetAnswers() {
-		allAnswers, err := h.answerSvc.GetAll(ctx, sub.GetQuestionId(), nil, nil)
-		if err != nil {
-			h.log.Error("failed to get answers for question",
-				zap.Int64("question_id", sub.GetQuestionId()),
-				zap.Error(err),
-			)
-			return nil, h.toResultGRPCError(err)
-		}
-
-		var correctAnswerID int64
-		isCorrect := false
-		for _, a := range allAnswers {
-			if a.Correct {
-				correctAnswerID = a.ID
-			}
-			if a.ID == sub.GetAnswerId() && a.Correct {
-				isCorrect = true
-			}
-		}
-
-		if isCorrect {
-			correctCount++
-		}
-
-		resultAnswers = append(resultAnswers, domain.QuizResultAnswer{
-			QuestionID:       sub.GetQuestionId(),
-			SelectedAnswerID: sub.GetAnswerId(),
-			CorrectAnswerID:  correctAnswerID,
-			IsCorrect:        isCorrect,
-		})
-
-		protoResults = append(protoResults, &quizv1.QuestionResult{
-			QuestionId:       sub.GetQuestionId(),
-			SelectedAnswerId: sub.GetAnswerId(),
-			CorrectAnswerId:  correctAnswerID,
-			IsCorrect:        isCorrect,
-		})
-	}
-
-	total := len(req.GetAnswers())
-	var score float64
-	if total > 0 {
-		score = float64(correctCount) / float64(total) * 100
-	}
-
-	saved, err := h.resultSvc.Submit(ctx, &domain.QuizResult{
-		QuizID:         req.GetQuizId(),
-		UserID:         userID,
-		Score:          score,
-		TotalQuestions: total,
-		CorrectAnswers: correctCount,
-		Answers:        resultAnswers,
-	})
+	result, err := h.resultSvc.Submit(ctx, userID, req)
 	if err != nil {
-		h.log.Error("failed to save quiz result",
-			zap.Int64("quiz_id", req.GetQuizId()),
-			zap.Error(err),
-		)
 		return nil, h.toResultGRPCError(err)
 	}
 
+	questionResults := make([]*quizv1.QuestionResult, len(result.Answers))
+	for i, a := range result.Answers {
+		questionResults[i] = &quizv1.QuestionResult{
+			QuestionId:        a.QuestionID,
+			SelectedAnswerIds: a.SelectedAnswerIDs,
+			CorrectAnswerIds:  a.CorrectAnswerIDs,
+			Score:             a.Score,
+			MaxScore:          a.MaxScore,
+		}
+	}
+
 	return &quizv1.SubmitQuizResponse{
-		ResultId:       saved.ID,
-		TotalQuestions: int32(total),
-		CorrectAnswers: int32(correctCount),
-		Score:          score,
-		Results:        protoResults,
+		ResultId:              result.ID,
+		TotalQuestionsCount:   int32(result.TotalQuestionsCount),
+		CorrectAnswersCount:   int32(result.CorrectAnswersCount),
+		IncorrectAnswersCount: int32(result.IncorrectAnswersCount),
+		UnansweredQuestions:   int32(result.UnansweredQuestions),
+		Score:                 result.Score,
+		MaxScore:              result.MaxScore,
+		Results:               questionResults,
 	}, nil
 }
 
 func (h *QuizResultHandler) GetQuizResults(ctx context.Context, req *quizv1.GetQuizResultsRequest) (*quizv1.GetQuizResultsResponse, error) {
-	var (
-		results []domain.QuizResult
-		err     error
-	)
-
-	if req.GetUserId() != 0 {
-		results, err = h.resultSvc.GetByQuizAndUser(ctx, req.GetQuizId(), req.GetUserId())
-	} else {
-		results, err = h.resultSvc.GetByQuiz(ctx, req.GetQuizId())
-	}
+	results, err := h.resultSvc.GetResults(ctx, req.GetQuizId(), req.GetUserId())
 	if err != nil {
 		return nil, h.toResultGRPCError(err)
 	}
@@ -135,13 +73,16 @@ func (h *QuizResultHandler) GetQuizResults(ctx context.Context, req *quizv1.GetQ
 	summaries := make([]*quizv1.QuizResultSummary, len(results))
 	for i, r := range results {
 		summaries[i] = &quizv1.QuizResultSummary{
-			Id:             r.ID,
-			QuizId:         r.QuizID,
-			UserId:         r.UserID,
-			Score:          r.Score,
-			TotalQuestions: int32(r.TotalQuestions),
-			CorrectAnswers: int32(r.CorrectAnswers),
-			SubmittedAt:    r.SubmittedAt.Unix(),
+			Id:                    r.ID,
+			QuizId:                r.QuizID,
+			UserId:                r.UserID,
+			Score:                 r.Score,
+			MaxScore:              r.MaxScore,
+			TotalQuestionsCount:   int32(r.TotalQuestionsCount),
+			CorrectAnswersCount:   int32(r.CorrectAnswersCount),
+			IncorrectAnswersCount: int32(r.IncorrectAnswersCount),
+			UnansweredQuestions:   int32(r.UnansweredQuestions),
+			SubmittedAt:           r.SubmittedAt.Unix(),
 		}
 	}
 
@@ -149,6 +90,9 @@ func (h *QuizResultHandler) GetQuizResults(ctx context.Context, req *quizv1.GetQ
 }
 
 func (h *QuizResultHandler) toResultGRPCError(err error) error {
+	if errors.Is(err, domain.ErrEmptyAnswers) {
+		return status.Error(codes.InvalidArgument, err.Error())
+	}
 	h.log.Error("quiz result service error", zap.Error(err))
 	return status.Error(codes.Internal, "internal error")
 }
