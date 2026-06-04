@@ -13,15 +13,7 @@ import (
 )
 
 func (h *Handler) CreateQuestion(ctx context.Context, req *quizv1.CreateQuestionRequest) (*quizv1.QuestionResponse, error) {
-	question := &domain.Question{
-		QuizID:         req.GetQuizId(),
-		Text:           req.GetText(),
-		Context:        req.GetContext(),
-		VideoAnswerUrl: req.GetVideoAnswerUrl(),
-		Order:          req.GetOrder(),
-	}
-
-	created, err := h.questionSvc.Create(ctx, question)
+	created, err := h.questionSvc.Create(ctx, req)
 	if err != nil {
 		return nil, h.toQuestionGRPCError(err)
 	}
@@ -39,18 +31,7 @@ func (h *Handler) GetQuestion(ctx context.Context, req *quizv1.GetQuestionReques
 }
 
 func (h *Handler) GetAllQuestions(ctx context.Context, req *quizv1.GetAllQuestionsRequest) (*quizv1.GetAllQuestionsResponse, error) {
-	var limit, offset *int
-
-	if req.Limit != nil {
-		v := int(req.GetLimit())
-		limit = &v
-	}
-	if req.Offset != nil {
-		v := int(req.GetOffset())
-		offset = &v
-	}
-
-	questions, err := h.questionSvc.GetAll(ctx, req.GetQuizId(), limit, offset)
+	questions, err := h.questionSvc.GetAll(ctx, req)
 	if err != nil {
 		return nil, h.toQuestionGRPCError(err)
 	}
@@ -64,14 +45,7 @@ func (h *Handler) GetAllQuestions(ctx context.Context, req *quizv1.GetAllQuestio
 }
 
 func (h *Handler) UpdateQuestion(ctx context.Context, req *quizv1.UpdateQuestionRequest) (*quizv1.QuestionResponse, error) {
-	question := &domain.Question{
-		Text:           req.GetText(),
-		Context:        req.GetContext(),
-		VideoAnswerUrl: req.GetVideoAnswerUrl(),
-		Order:          req.GetOrder(),
-	}
-
-	updated, err := h.questionSvc.Update(ctx, req.GetId(), question)
+	updated, err := h.questionSvc.Update(ctx, req.GetId(), req)
 	if err != nil {
 		return nil, h.toQuestionGRPCError(err)
 	}

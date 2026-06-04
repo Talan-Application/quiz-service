@@ -26,24 +26,27 @@ func (r *QuizResultRepository) Save(ctx context.Context, result *domain.QuizResu
 	defer tx.Rollback(ctx)
 
 	const resultQuery = `
-		INSERT INTO quiz_results (quiz_id, user_id, score, total_questions, correct_answers, submitted_at)
-		VALUES ($1, $2, $3, $4, $5, NOW())
+		INSERT INTO quiz_results (quiz_id, user_id, score, max_score, total_questions_count, correct_answers_count, incorrect_answers_count, unanswered_questions, submitted_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
 		RETURNING id, submitted_at`
 
 	err = tx.QueryRow(ctx, resultQuery,
 		result.QuizID,
 		result.UserID,
 		result.Score,
-		result.TotalQuestions,
-		result.CorrectAnswers,
+		result.MaxScore,
+		result.TotalQuestionsCount,
+		result.CorrectAnswersCount,
+		result.IncorrectAnswersCount,
+		result.UnansweredQuestions,
 	).Scan(&result.ID, &result.SubmittedAt)
 	if err != nil {
 		return nil, fmt.Errorf("insert quiz result: %w", err)
 	}
 
 	const answerQuery = `
-		INSERT INTO quiz_result_answers (result_id, question_id, selected_answer_id, correct_answer_id, is_correct)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO quiz_result_answers (result_id, question_id, selected_answer_ids, correct_answer_ids, score, max_score)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id`
 
 	for i := range result.Answers {
@@ -51,9 +54,10 @@ func (r *QuizResultRepository) Save(ctx context.Context, result *domain.QuizResu
 		err = tx.QueryRow(ctx, answerQuery,
 			result.ID,
 			result.Answers[i].QuestionID,
-			result.Answers[i].SelectedAnswerID,
-			result.Answers[i].CorrectAnswerID,
-			result.Answers[i].IsCorrect,
+			result.Answers[i].SelectedAnswerIDs,
+			result.Answers[i].CorrectAnswerIDs,
+			result.Answers[i].Score,
+			result.Answers[i].MaxScore,
 		).Scan(&result.Answers[i].ID)
 		if err != nil {
 			return nil, fmt.Errorf("insert result answer: %w", err)
@@ -69,7 +73,7 @@ func (r *QuizResultRepository) Save(ctx context.Context, result *domain.QuizResu
 
 func (r *QuizResultRepository) GetByQuizAndUser(ctx context.Context, quizID, userID int64) ([]domain.QuizResult, error) {
 	const query = `
-		SELECT id, quiz_id, user_id, score, total_questions, correct_answers, submitted_at
+		SELECT id, quiz_id, user_id, score, max_score, total_questions_count, correct_answers_count, incorrect_answers_count, unanswered_questions, submitted_at
 		FROM quiz_results
 		WHERE quiz_id = $1 AND user_id = $2
 		ORDER BY submitted_at DESC`
@@ -85,7 +89,7 @@ func (r *QuizResultRepository) GetByQuizAndUser(ctx context.Context, quizID, use
 
 func (r *QuizResultRepository) GetByQuiz(ctx context.Context, quizID int64) ([]domain.QuizResult, error) {
 	const query = `
-		SELECT id, quiz_id, user_id, score, total_questions, correct_answers, submitted_at
+		SELECT id, quiz_id, user_id, score, max_score, total_questions_count, correct_answers_count, incorrect_answers_count, unanswered_questions, submitted_at
 		FROM quiz_results
 		WHERE quiz_id = $1
 		ORDER BY submitted_at DESC`
@@ -103,7 +107,18 @@ func scanResults(rows pgx.Rows) ([]domain.QuizResult, error) {
 	var results []domain.QuizResult
 	for rows.Next() {
 		var r domain.QuizResult
-		if err := rows.Scan(&r.ID, &r.QuizID, &r.UserID, &r.Score, &r.TotalQuestions, &r.CorrectAnswers, &r.SubmittedAt); err != nil {
+		if err := rows.Scan(
+			&r.ID,
+			&r.QuizID,
+			&r.UserID,
+			&r.Score,
+			&r.MaxScore,
+			&r.TotalQuestionsCount,
+			&r.CorrectAnswersCount,
+			&r.IncorrectAnswersCount,
+			&r.UnansweredQuestions,
+			&r.SubmittedAt,
+		); err != nil {
 			return nil, fmt.Errorf("scan quiz result: %w", err)
 		}
 		results = append(results, r)
@@ -113,4 +128,3 @@ func scanResults(rows pgx.Rows) ([]domain.QuizResult, error) {
 	}
 	return results, nil
 }
-

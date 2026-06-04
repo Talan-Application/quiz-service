@@ -101,6 +101,32 @@ func (r *QuestionRepository) GetAll(ctx context.Context, quizID int64, limit *in
 	return questions, nil
 }
 
+func (r *QuestionRepository) GetByQuizId(ctx context.Context, quizId int64) ([]domain.Question, error) {
+	query := `SELECT id, quiz_id, text, context, video_answer_url, "order", created_at, updated_at
+			  FROM questions WHERE quiz_id = $1 ORDER BY "order", id`
+
+	rows, err := r.db.Query(ctx, query, quizId)
+	if err != nil {
+		return nil, fmt.Errorf("get questions by quiz id: %w", err)
+	}
+	defer rows.Close()
+
+	var questions []domain.Question
+	for rows.Next() {
+		var q domain.Question
+		if err := rows.Scan(&q.ID, &q.QuizID, &q.Text, &q.Context, &q.VideoAnswerUrl, &q.Order, &q.CreatedAt, &q.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scan question: %w", err)
+		}
+		questions = append(questions, q)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("next rows: %w", err)
+	}
+
+	return questions, nil
+}
+
 func (r *QuestionRepository) GetById(ctx context.Context, id int64) (*domain.Question, error) {
 	query := `SELECT id, quiz_id, text, context, video_answer_url, "order", created_at, updated_at
 			  FROM questions WHERE id = $1`

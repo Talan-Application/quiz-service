@@ -13,13 +13,7 @@ import (
 )
 
 func (h *Handler) CreateAnswer(ctx context.Context, req *quizv1.CreateAnswerRequest) (*quizv1.AnswerResponse, error) {
-	answer := &domain.Answer{
-		QuestionID: req.GetQuestionId(),
-		Text:       req.GetText(),
-		Correct:    req.GetCorrect(),
-	}
-
-	created, err := h.answerSvc.Create(ctx, answer)
+	created, err := h.answerSvc.Create(ctx, req)
 	if err != nil {
 		return nil, h.toAnswerGRPCError(err)
 	}
@@ -37,18 +31,7 @@ func (h *Handler) GetAnswer(ctx context.Context, req *quizv1.GetAnswerRequest) (
 }
 
 func (h *Handler) GetAllAnswers(ctx context.Context, req *quizv1.GetAllAnswersRequest) (*quizv1.GetAllAnswersResponse, error) {
-	var limit, offset *int
-
-	if req.Limit != nil {
-		v := int(req.GetLimit())
-		limit = &v
-	}
-	if req.Offset != nil {
-		v := int(req.GetOffset())
-		offset = &v
-	}
-
-	answers, err := h.answerSvc.GetAll(ctx, req.GetQuestionId(), limit, offset)
+	answers, err := h.answerSvc.GetAll(ctx, req)
 	if err != nil {
 		return nil, h.toAnswerGRPCError(err)
 	}
@@ -62,12 +45,7 @@ func (h *Handler) GetAllAnswers(ctx context.Context, req *quizv1.GetAllAnswersRe
 }
 
 func (h *Handler) UpdateAnswer(ctx context.Context, req *quizv1.UpdateAnswerRequest) (*quizv1.AnswerResponse, error) {
-	answer := &domain.Answer{
-		Text:    req.GetText(),
-		Correct: req.GetCorrect(),
-	}
-
-	updated, err := h.answerSvc.Update(ctx, req.GetId(), answer)
+	updated, err := h.answerSvc.Update(ctx, req.GetId(), req)
 	if err != nil {
 		return nil, h.toAnswerGRPCError(err)
 	}

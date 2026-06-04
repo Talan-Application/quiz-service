@@ -97,6 +97,32 @@ func (r *AnswerRepository) GetAll(ctx context.Context, questionID int64, limit *
 	return answers, nil
 }
 
+func (r *AnswerRepository) GetByQuestionIDs(ctx context.Context, questionIDs []int64) ([]domain.Answer, error) {
+	query := `SELECT id, question_id, text, correct, created_at, updated_at
+			  FROM answers WHERE question_id = ANY($1) ORDER BY question_id, id`
+
+	rows, err := r.db.Query(ctx, query, questionIDs)
+	if err != nil {
+		return nil, fmt.Errorf("get answers by question ids: %w", err)
+	}
+	defer rows.Close()
+
+	var answers []domain.Answer
+	for rows.Next() {
+		var a domain.Answer
+		if err := rows.Scan(&a.ID, &a.QuestionID, &a.Text, &a.Correct, &a.CreatedAt, &a.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scan answer: %w", err)
+		}
+		answers = append(answers, a)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("next rows: %w", err)
+	}
+
+	return answers, nil
+}
+
 func (r *AnswerRepository) GetById(ctx context.Context, id int64) (*domain.Answer, error) {
 	query := `SELECT id, question_id, text, correct, created_at, updated_at
 			  FROM answers WHERE id = $1`

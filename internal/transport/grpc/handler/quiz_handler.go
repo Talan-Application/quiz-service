@@ -34,17 +34,7 @@ func (h *Handler) CreateQuiz(ctx context.Context, req *quizv1.CreateQuizRequest)
 		return nil, status.Error(codes.Unauthenticated, "authentication required")
 	}
 
-	quiz := &domain.Quiz{
-		Title:           req.GetTitle(),
-		Language:        req.GetLanguage(),
-		AuthorID:        userID,
-		Type:            domain.QuizType(req.GetType()),
-		CommonSubjectID: req.GetCommonSubjectId(),
-		IsEntStandard:   req.GetIsEntStandard(),
-		Status:          domain.QuizStatusDraft,
-	}
-
-	created, err := h.quizSvc.Create(ctx, quiz)
+	created, err := h.quizSvc.Create(ctx, req, userID)
 	if err != nil {
 		return nil, h.toGRPCError(err)
 	}
@@ -62,23 +52,7 @@ func (h *Handler) GetQuiz(ctx context.Context, req *quizv1.GetQuizRequest) (*qui
 }
 
 func (h *Handler) GetAllQuizzes(ctx context.Context, req *quizv1.GetAllQuizzesRequest) (*quizv1.GetAllQuizzesResponse, error) {
-	var limit, offset *int
-	var status *domain.QuizStatus
-
-	if req.Limit != nil {
-		v := int(req.GetLimit())
-		limit = &v
-	}
-	if req.Offset != nil {
-		v := int(req.GetOffset())
-		offset = &v
-	}
-	if req.Status != nil {
-		s := domain.QuizStatus(req.GetStatus())
-		status = &s
-	}
-
-	quizzes, err := h.quizSvc.GetAll(ctx, status, limit, offset)
+	quizzes, err := h.quizSvc.GetAll(ctx, req)
 	if err != nil {
 		return nil, h.toGRPCError(err)
 	}
@@ -105,17 +79,7 @@ func (h *Handler) GetMyQuizzes(ctx context.Context, req *quizv1.GetMyQuizzesRequ
 		return nil, status.Error(codes.Unauthenticated, "authentication required")
 	}
 
-	var limit, offset *int
-	if req.Limit != nil {
-		v := int(req.GetLimit())
-		limit = &v
-	}
-	if req.Offset != nil {
-		v := int(req.GetOffset())
-		offset = &v
-	}
-
-	quizzes, err := h.quizSvc.GetAllByAuthor(ctx, userID, limit, offset)
+	quizzes, err := h.quizSvc.GetAllByAuthor(ctx, req, userID)
 	if err != nil {
 		return nil, h.toGRPCError(err)
 	}
@@ -129,14 +93,7 @@ func (h *Handler) GetMyQuizzes(ctx context.Context, req *quizv1.GetMyQuizzesRequ
 }
 
 func (h *Handler) UpdateQuiz(ctx context.Context, req *quizv1.UpdateQuizRequest) (*quizv1.QuizResponse, error) {
-	quiz := &domain.Quiz{
-		Title:         req.GetTitle(),
-		Language:      req.GetLanguage(),
-		Type:          domain.QuizType(req.GetType()),
-		IsEntStandard: req.GetIsEntStandard(),
-	}
-
-	updated, err := h.quizSvc.Update(ctx, req.GetId(), quiz)
+	updated, err := h.quizSvc.Update(ctx, req.GetId(), req)
 	if err != nil {
 		return nil, h.toGRPCError(err)
 	}
