@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package quiz.v1;
 
-option go_package = "github.com/Talan-Application/proto-generation/gen/quiz/v1;quizv1";
+option go_package = "github.com/Talan-Application/proto-generation/quiz/v1;quizv1";
 
 service QuizService {
   rpc CreateQuiz(CreateQuizRequest)       returns (QuizResponse);
@@ -15,19 +15,11 @@ service QuizService {
 }
 
 service QuestionService {
-  rpc CreateQuestion(CreateQuestionRequest)       returns (QuestionResponse);
-  rpc GetQuestion(GetQuestionRequest)             returns (QuestionResponse);
-  rpc GetAllQuestions(GetAllQuestionsRequest)     returns (GetAllQuestionsResponse);
-  rpc UpdateQuestion(UpdateQuestionRequest)       returns (QuestionResponse);
-  rpc DeleteQuestion(DeleteQuestionRequest)       returns (DeleteQuestionResponse);
-}
-
-service AnswerService {
-  rpc CreateAnswer(CreateAnswerRequest)       returns (AnswerResponse);
-  rpc GetAnswer(GetAnswerRequest)             returns (AnswerResponse);
-  rpc GetAllAnswers(GetAllAnswersRequest)     returns (GetAllAnswersResponse);
-  rpc UpdateAnswer(UpdateAnswerRequest)       returns (AnswerResponse);
-  rpc DeleteAnswer(DeleteAnswerRequest)       returns (DeleteAnswerResponse);
+  rpc CreateQuestionWithAnswers(CreateQuestionWithAnswersRequest) returns (QuestionWithAnswersResponse);
+  rpc GetQuestion(GetQuestionRequest)                             returns (QuestionWithAnswersResponse);
+  rpc GetAllQuestions(GetAllQuestionsRequest)                     returns (GetAllQuestionsWithAnswersResponse);
+  rpc UpdateQuestionWithAnswers(UpdateQuestionWithAnswersRequest) returns (QuestionWithAnswersResponse);
+  rpc DeleteQuestion(DeleteQuestionRequest)                       returns (DeleteQuestionResponse);
 }
 
 service QuizResultService {
@@ -97,20 +89,39 @@ message DeleteQuizResponse {
 
 message PublishQuizResponse {}
 
-message CreateQuestionRequest {
-  int64  quiz_id          = 1;
-  string text             = 2;
-  string context          = 3;
-  string video_answer_url = 4;
-  int64  order            = 5;
+message AnswerInput {
+  string text    = 1;
+  bool   correct = 2;
 }
 
-message UpdateQuestionRequest {
+message CreateQuestionWithAnswersRequest {
+  int64             quiz_id          = 1;
+  string            text             = 2;
+  string            context          = 3;
+  string            video_answer_url = 4;
+  int64             order            = 5;
+  repeated AnswerInput answers       = 6;
+}
+
+message UpdateQuestionWithAnswersRequest {
   int64  id               = 1;
   string text             = 2;
   string context          = 3;
   string video_answer_url = 4;
   int64  order            = 5;
+  repeated AnswerInput answers = 6;
+}
+
+message QuestionWithAnswersResponse {
+  int64                   id               = 1;
+  int64                   quiz_id          = 2;
+  string                  text             = 3;
+  string                  context          = 4;
+  string                  video_answer_url = 5;
+  int64                   order            = 6;
+  int64                   created_at       = 7;
+  int64                   updated_at       = 8;
+  repeated AnswerResponse answers          = 9;
 }
 
 message GetQuestionRequest {
@@ -127,50 +138,12 @@ message DeleteQuestionRequest {
   int64 id = 1;
 }
 
-message QuestionResponse {
-  int64  id               = 1;
-  int64  quiz_id          = 2;
-  string text             = 3;
-  string context          = 4;
-  string video_answer_url = 5;
-  int64  order            = 6;
-  int64  created_at       = 7;
-  int64  updated_at       = 8;
-}
-
-message GetAllQuestionsResponse {
-  repeated QuestionResponse questions = 1;
+message GetAllQuestionsWithAnswersResponse {
+  repeated QuestionWithAnswersResponse questions = 1;
 }
 
 message DeleteQuestionResponse {
   string message = 1;
-}
-
-// Answer messages
-message CreateAnswerRequest {
-  int64  question_id = 1;
-  string text        = 2;
-  bool   correct     = 3;
-}
-
-message UpdateAnswerRequest {
-  int64  id      = 1;
-  string text    = 2;
-  bool   correct = 3;
-}
-
-message GetAnswerRequest {
-  int64 id = 1;
-}
-
-message GetAllAnswersRequest {
-  int64          question_id = 1;
-  optional int32 limit       = 2;
-  optional int32 offset      = 3;
-}
-
-message DeleteAnswerRequest {
-  int64 id = 1;
 }
 
 message AnswerResponse {
@@ -180,14 +153,6 @@ message AnswerResponse {
   bool   correct     = 4;
   int64  created_at  = 5;
   int64  updated_at  = 6;
-}
-
-message GetAllAnswersResponse {
-  repeated AnswerResponse answers = 1;
-}
-
-message DeleteAnswerResponse {
-  string message = 1;
 }
 
 message AnswerSubmission {

@@ -11,15 +11,16 @@ import (
 )
 
 type QuestionService struct {
-	repo   repository.QuestionRepository
-	logger *zap.Logger
+	repo       repository.QuestionRepository
+	answerRepo repository.AnswerRepository
+	logger     *zap.Logger
 }
 
-func NewQuestionService(repo repository.QuestionRepository, logger *zap.Logger) *QuestionService {
-	return &QuestionService{repo: repo, logger: logger}
+func NewQuestionService(repo repository.QuestionRepository, answerRepo repository.AnswerRepository, logger *zap.Logger) *QuestionService {
+	return &QuestionService{repo: repo, answerRepo: answerRepo, logger: logger}
 }
 
-func (s *QuestionService) Create(ctx context.Context, req *quizv1.CreateQuestionRequest) (*domain.Question, error) {
+func (s *QuestionService) CreateWithAnswers(ctx context.Context, req *quizv1.CreateQuestionWithAnswersRequest) (*domain.QuestionWithAnswers, error) {
 	question := &domain.Question{
 		QuizID:         req.GetQuizId(),
 		Text:           req.GetText(),
@@ -27,24 +28,33 @@ func (s *QuestionService) Create(ctx context.Context, req *quizv1.CreateQuestion
 		VideoAnswerUrl: req.GetVideoAnswerUrl(),
 		Order:          req.GetOrder(),
 	}
-	created, err := s.repo.Create(ctx, question)
+
+	answers := make([]domain.Answer, len(req.GetAnswers()))
+	for i, a := range req.GetAnswers() {
+		answers[i] = domain.Answer{
+			Text:    a.GetText(),
+			Correct: a.GetCorrect(),
+		}
+	}
+
+	result, err := s.repo.CreateWithAnswers(ctx, question, answers)
 	if err != nil {
-		s.logger.Error("failed to create question", zap.Error(err))
+		s.logger.Error("failed to create question with answers", zap.Error(err))
 		return nil, err
 	}
-	return created, nil
+	return result, nil
 }
 
-func (s *QuestionService) GetByID(ctx context.Context, id int64) (*domain.Question, error) {
-	question, err := s.repo.GetById(ctx, id)
+func (s *QuestionService) GetByID(ctx context.Context, id int64) (*domain.QuestionWithAnswers, error) {
+	result, err := s.repo.GetByIdWithAnswers(ctx, id)
 	if err != nil {
-		s.logger.Error("failed to get question", zap.Int64("id", id), zap.Error(err))
+		s.logger.Error("failed to get question with answers", zap.Int64("id", id), zap.Error(err))
 		return nil, err
 	}
-	return question, nil
+	return result, nil
 }
 
-func (s *QuestionService) GetAll(ctx context.Context, req *quizv1.GetAllQuestionsRequest) ([]domain.Question, error) {
+func (s *QuestionService) GetAll(ctx context.Context, req *quizv1.GetAllQuestionsRequest) ([]domain.QuestionWithAnswers, error) {
 	var limit, offset *int
 	if req.Limit != nil {
 		v := int(req.GetLimit())
@@ -55,30 +65,43 @@ func (s *QuestionService) GetAll(ctx context.Context, req *quizv1.GetAllQuestion
 		offset = &v
 	}
 
-	questions, err := s.repo.GetAll(ctx, req.GetQuizId(), limit, offset)
+	results, err := s.repo.GetAllWithAnswers(ctx, req.GetQuizId(), limit, offset)
 	if err != nil {
-		s.logger.Error("failed to get questions", zap.Int64("quiz_id", req.GetQuizId()), zap.Error(err))
+		s.logger.Error("failed to get questions with answers", zap.Int64("quiz_id", req.GetQuizId()), zap.Error(err))
 		return nil, err
 	}
-	return questions, nil
+	return results, nil
 }
 
-func (s *QuestionService) Update(ctx context.Context, id int64, req *quizv1.UpdateQuestionRequest) (*domain.Question, error) {
+func (s *QuestionService) UpdateWithAnswers(ctx context.Context, id int64, req *quizv1.UpdateQuestionWithAnswersRequest) (*domain.QuestionWithAnswers, error) {
 	question := &domain.Question{
 		Text:           req.GetText(),
 		Context:        req.GetContext(),
 		VideoAnswerUrl: req.GetVideoAnswerUrl(),
 		Order:          req.GetOrder(),
 	}
-	updated, err := s.repo.Update(ctx, id, question)
+
+	answers := make([]domain.Answer, len(req.GetAnswers()))
+	for i, a := range req.GetAnswers() {
+		answers[i] = domain.Answer{
+			Text:    a.GetText(),
+			Correct: a.GetCorrect(),
+		}
+	}
+
+	result, err := s.repo.UpdateWithAnswers(ctx, id, question, answers)
 	if err != nil {
-		s.logger.Error("failed to update question", zap.Int64("id", id), zap.Error(err))
+		s.logger.Error("failed to update question with answers", zap.Int64("id", id), zap.Error(err))
 		return nil, err
 	}
-	return updated, nil
+	return result, nil
 }
 
 func (s *QuestionService) Delete(ctx context.Context, id int64) error {
+	if err := s.answerRepo.DeleteByQuestionID(ctx, id); err != nil {
+		s.logger.Error("failed to delete answers for question", zap.Int64("id", id), zap.Error(err))
+		return err
+	}
 	if err := s.repo.Delete(ctx, id); err != nil {
 		s.logger.Error("failed to delete question", zap.Int64("id", id), zap.Error(err))
 		return err
