@@ -20,7 +20,7 @@ type Server struct {
 	log        *zap.Logger
 }
 
-func NewServer(cfg config.GRPCConfig, jwtSecret string, log *zap.Logger, quizSvc service.IQuizService, questionSvc service.IQuestionService, answerSvc service.IAnswerService, resultSvc service.IQuizResultService) *Server {
+func NewServer(cfg config.GRPCConfig, jwtSecret string, log *zap.Logger, quizSvc service.IQuizService, questionSvc service.IQuestionService, resultSvc service.IQuizResultService) *Server {
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			loggingInterceptor(log),
@@ -29,10 +29,9 @@ func NewServer(cfg config.GRPCConfig, jwtSecret string, log *zap.Logger, quizSvc
 		),
 	)
 
-	h := handler.NewHandler(quizSvc, questionSvc, answerSvc, log)
+	h := handler.NewHandler(quizSvc, questionSvc, log)
 	quizv1.RegisterQuizServiceServer(grpcServer, h)
 	quizv1.RegisterQuestionServiceServer(grpcServer, h)
-	quizv1.RegisterAnswerServiceServer(grpcServer, h)
 
 	resultHandler := handler.NewQuizResultHandler(resultSvc, log)
 	quizv1.RegisterQuizResultServiceServer(grpcServer, resultHandler)

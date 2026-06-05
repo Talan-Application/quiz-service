@@ -17,15 +17,13 @@ import (
 type Handler struct {
 	quizv1.UnimplementedQuizServiceServer
 	quizv1.UnimplementedQuestionServiceServer
-	quizv1.UnimplementedAnswerServiceServer
 	quizSvc     service.IQuizService
 	questionSvc service.IQuestionService
-	answerSvc   service.IAnswerService
 	log         *zap.Logger
 }
 
-func NewHandler(quizSvc service.IQuizService, questionSvc service.IQuestionService, answerSvc service.IAnswerService, log *zap.Logger) *Handler {
-	return &Handler{quizSvc: quizSvc, questionSvc: questionSvc, answerSvc: answerSvc, log: log}
+func NewHandler(quizSvc service.IQuizService, questionSvc service.IQuestionService, log *zap.Logger) *Handler {
+	return &Handler{quizSvc: quizSvc, questionSvc: questionSvc, log: log}
 }
 
 func (h *Handler) CreateQuiz(ctx context.Context, req *quizv1.CreateQuizRequest) (*quizv1.QuizResponse, error) {

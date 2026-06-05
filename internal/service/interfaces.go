@@ -18,18 +18,10 @@ type IQuizService interface {
 }
 
 type IQuestionService interface {
-	Create(ctx context.Context, req *quizv1.CreateQuestionRequest) (*domain.Question, error)
-	GetByID(ctx context.Context, id int64) (*domain.Question, error)
-	GetAll(ctx context.Context, req *quizv1.GetAllQuestionsRequest) ([]domain.Question, error)
-	Update(ctx context.Context, id int64, req *quizv1.UpdateQuestionRequest) (*domain.Question, error)
-	Delete(ctx context.Context, id int64) error
-}
-
-type IAnswerService interface {
-	Create(ctx context.Context, req *quizv1.CreateAnswerRequest) (*domain.Answer, error)
-	GetByID(ctx context.Context, id int64) (*domain.Answer, error)
-	GetAll(ctx context.Context, req *quizv1.GetAllAnswersRequest) ([]domain.Answer, error)
-	Update(ctx context.Context, id int64, req *quizv1.UpdateAnswerRequest) (*domain.Answer, error)
+	CreateWithAnswers(ctx context.Context, req *quizv1.CreateQuestionWithAnswersRequest) (*domain.QuestionWithAnswers, error)
+	GetByID(ctx context.Context, id int64) (*domain.QuestionWithAnswers, error)
+	GetAll(ctx context.Context, req *quizv1.GetAllQuestionsRequest) ([]domain.QuestionWithAnswers, error)
+	UpdateWithAnswers(ctx context.Context, id int64, req *quizv1.UpdateQuestionWithAnswersRequest) (*domain.QuestionWithAnswers, error)
 	Delete(ctx context.Context, id int64) error
 }
 

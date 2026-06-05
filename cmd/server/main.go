@@ -36,11 +36,10 @@ func main() {
 	resultRepo := postgres.NewQuizResultRepository(db)
 
 	quizSvc := service.NewQuizService(quizRepo, zapLog)
-	questionSvc := service.NewQuestionService(questionRepo, zapLog)
-	answerSvc := service.NewAnswerService(answerRepo, zapLog)
+	questionSvc := service.NewQuestionService(questionRepo, answerRepo, zapLog)
 	resultSvc := service.NewQuizResultService(resultRepo, quizRepo, questionRepo, answerRepo, zapLog)
 
-	grpcSrv := grpcserver.NewServer(cfg.GRPC, cfg.JWT.SecretKey, zapLog, quizSvc, questionSvc, answerSvc, resultSvc)
+	grpcSrv := grpcserver.NewServer(cfg.GRPC, cfg.JWT.SecretKey, zapLog, quizSvc, questionSvc, resultSvc)
 
 	go func() {
 		if err := grpcSrv.Run(); err != nil {

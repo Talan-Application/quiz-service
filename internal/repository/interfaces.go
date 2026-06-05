@@ -18,11 +18,14 @@ type QuizRepository interface {
 
 type QuestionRepository interface {
 	Create(ctx context.Context, question *domain.Question) (*domain.Question, error)
+	CreateWithAnswers(ctx context.Context, question *domain.Question, answers []domain.Answer) (*domain.QuestionWithAnswers, error)
 	Delete(ctx context.Context, id int64) error
-	Update(ctx context.Context, id int64, question *domain.Question) (*domain.Question, error)
 	GetAll(ctx context.Context, quizID int64, limit *int, offset *int) ([]domain.Question, error)
 	GetById(ctx context.Context, id int64) (*domain.Question, error)
 	GetByQuizId(ctx context.Context, quizId int64) ([]domain.Question, error)
+	GetByIdWithAnswers(ctx context.Context, id int64) (*domain.QuestionWithAnswers, error)
+	GetAllWithAnswers(ctx context.Context, quizID int64, limit *int, offset *int) ([]domain.QuestionWithAnswers, error)
+	UpdateWithAnswers(ctx context.Context, id int64, question *domain.Question, answers []domain.Answer) (*domain.QuestionWithAnswers, error)
 }
 
 type AnswerRepository interface {
@@ -32,6 +35,7 @@ type AnswerRepository interface {
 	GetAll(ctx context.Context, questionID int64, limit *int, offset *int) ([]domain.Answer, error)
 	GetById(ctx context.Context, id int64) (*domain.Answer, error)
 	GetByQuestionIDs(ctx context.Context, questionIDs []int64) ([]domain.Answer, error)
+	DeleteByQuestionID(ctx context.Context, questionID int64) error
 }
 
 type QuizResultRepository interface {

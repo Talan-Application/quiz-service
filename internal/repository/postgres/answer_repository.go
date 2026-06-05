@@ -123,6 +123,14 @@ func (r *AnswerRepository) GetByQuestionIDs(ctx context.Context, questionIDs []i
 	return answers, nil
 }
 
+func (r *AnswerRepository) DeleteByQuestionID(ctx context.Context, questionID int64) error {
+	_, err := r.db.Exec(ctx, `DELETE FROM answers WHERE question_id = $1`, questionID)
+	if err != nil {
+		return fmt.Errorf("delete answers by question_id: %w", err)
+	}
+	return nil
+}
+
 func (r *AnswerRepository) GetById(ctx context.Context, id int64) (*domain.Answer, error) {
 	query := `SELECT id, question_id, text, correct, created_at, updated_at
 			  FROM answers WHERE id = $1`

@@ -13,6 +13,11 @@ type Question struct {
 	UpdatedAt      time.Time
 }
 
+type QuestionWithAnswers struct {
+	Question
+	Answers []Answer
+}
+
 type QuestionWithCorrectAnswer struct {
 	ID                int64
 	CorrectAnswerIDs  []int64
