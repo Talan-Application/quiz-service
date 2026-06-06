@@ -1,4 +1,4 @@
-.PHONY: build run test lint tidy docker-build docker-up docker-down migrate-up migrate-down
+.PHONY: build run test lint tidy proto-update docker-build docker-up docker-down migrate-up migrate-down
 include .env
 export
 
@@ -22,6 +22,11 @@ lint:
 	golangci-lint run ./...
 
 tidy:
+	go mod tidy
+
+proto-update: export GOPROXY = direct
+proto-update:
+	go get github.com/Talan-Application/proto-generation@master
 	go mod tidy
 
 docker-build:
